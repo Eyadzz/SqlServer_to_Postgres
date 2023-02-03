@@ -3,7 +3,7 @@ using System.Data.SqlClient;
 using Npgsql;
 
 const string sqlServerConnectionString = "Server=.;Database=LearningTechnologiesDb;Trusted_Connection=True;Encrypt=False;";
-const string postgreConnectionString = "Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=LearningTechnologiesDb";
+const string postgresConnectionString = "Server=localhost;Port=5432;User Id=postgres;Password=postgres;Database=LearningTechnologiesDb";
 
 IEnumerable<string?> FetchTablesInSqlServerSchema(string schemaName)
 {
@@ -23,7 +23,7 @@ IEnumerable<string?> FetchTablesInSqlServerSchema(string schemaName)
 
 bool CreateSchemaInPostgres(string schemaName)
 {
-    using (NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgreConnectionString))
+    using (NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgresConnectionString))
     {
         postgresqlConnection.Open();
 
@@ -47,89 +47,91 @@ bool CreateSchemaInPostgres(string schemaName)
     return true;
 }
 
-void CreateTablesToPostgres(string schema, List<string> tables)
+void CreateTableInPostgres(string schema, string table)
 {
     
     SqlConnection sqlServerConnection = new SqlConnection(sqlServerConnectionString);
     sqlServerConnection.Open();
 
-    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgreConnectionString);
+    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgresConnectionString);
     postgresqlConnection.Open();
 
     NpgsqlCommand postgresqlCommand = new NpgsqlCommand();
 
-    foreach (string table in tables)
-    {
-        SqlCommand sqlServerTableCommand = new SqlCommand($"SELECT * FROM {schema}." + table, sqlServerConnection);
+    SqlCommand sqlServerTableCommand = new SqlCommand($"SELECT * FROM {schema}." + table, sqlServerConnection);
 
-        using (SqlDataAdapter sqlServerTableDataAdapter = new SqlDataAdapter(sqlServerTableCommand))
+    using (SqlDataAdapter sqlServerTableDataAdapter = new SqlDataAdapter(sqlServerTableCommand))
+    {
+        DataTable dataTable = new DataTable();
+        sqlServerTableDataAdapter.Fill(dataTable);
+        
+        var createPostgresTableQuery = $"CREATE TABLE \"{schema}\".\"{table}\" (";
+        
+        for (var i = 0; i < dataTable.Columns.Count; i++)
         {
-            DataTable dataTable = new DataTable();
-            sqlServerTableDataAdapter.Fill(dataTable);
+            string postgresType;
             
-            var createPostgreTable = $"CREATE TABLE \"{schema}\".\"{table}\" (";
-            
-            for (int i = 0; i < dataTable.Columns.Count; i++)
+            if (dataTable.Columns[i].DataType == typeof(Int32))
             {
-                string postgresType = null;
-                
-                if (dataTable.Columns[i].DataType == typeof(Int32))
-                {
-                    postgresType = "INTEGER";
-                }
-                else if (dataTable.Columns[i].DataType == typeof(String))
-                {
-                    postgresType = "VARCHAR";
-                }
-                else if (dataTable.Columns[i].DataType == typeof(DateTime))
-                {
-                    postgresType = "TIMESTAMP";
-                }
-                else if (dataTable.Columns[i].DataType == typeof(Byte[]))
-                {
-                    postgresType = "BYTEA";
-                }
-                else if (dataTable.Columns[i].DataType == typeof(Double) || dataTable.Columns[i].DataType == typeof(float) || dataTable.Columns[i].DataType == typeof(Decimal))
-                {
-                    postgresType = "FLOAT";
-                }
-                else if (dataTable.Columns[i].DataType == typeof(Boolean))
-                {
-                    postgresType = "BOOLEAN";
-                }
-                
-                createPostgreTable += $"{dataTable.Columns[i].ColumnName} {postgresType}, ";
-                
-                // remove last comma
-                createPostgreTable = createPostgreTable.Remove(createPostgreTable.Length - 2);
-                createPostgreTable += ")";
-                
-                postgresqlCommand.CommandText = createPostgreTable;
-                try
-                {
-                    postgresqlCommand.ExecuteNonQuery();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    break;
-                }
+                postgresType = "INTEGER";
+            }
+            else if (dataTable.Columns[i].DataType == typeof(String))
+            {
+                postgresType = "VARCHAR";
+            }
+            else if (dataTable.Columns[i].DataType == typeof(DateTime))
+            {
+                postgresType = "TIMESTAMP";
+            }
+            else if (dataTable.Columns[i].DataType == typeof(Byte[]))
+            {
+                postgresType = "BYTEA";
+            }
+            else if (dataTable.Columns[i].DataType == typeof(Double) || dataTable.Columns[i].DataType == typeof(float) || dataTable.Columns[i].DataType == typeof(Decimal))
+            {
+                postgresType = "FLOAT";
+            }
+            else if (dataTable.Columns[i].DataType == typeof(Boolean))
+            {
+                postgresType = "BOOLEAN";
+            }
+            else
+            {
+                postgresType = dataTable.Columns[i].DataType.ToString();
+            }
+            
+            createPostgresTableQuery += $"{dataTable.Columns[i].ColumnName} {postgresType}, ";
+            
+            // remove last comma
+            createPostgresTableQuery = createPostgresTableQuery.Remove(createPostgresTableQuery.Length - 2);
+            createPostgresTableQuery += ")";
+            
+            postgresqlCommand.CommandText = createPostgresTableQuery;
+            try
+            {
+                postgresqlCommand.ExecuteNonQuery();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                break;
             }
         }
+    
         Console.WriteLine($"{schema}.{table} WAS CREATED");
-        
-        postgresqlConnection.Close();
-        sqlServerConnection.Close();
+    
+    postgresqlConnection.Close();
+    sqlServerConnection.Close();
     }
 }
 
-void InsertRecordsIntoPostgres(string sqlSchema, string table, string postgreSchema, bool skipDuplicates = false)
+void InsertRecordsIntoPostgres(string sqlSchema, string table, string postgresSchema)
 {
     
     SqlConnection sqlServerConnection = new SqlConnection(sqlServerConnectionString);
     sqlServerConnection.Open();
 
-    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgreConnectionString);
+    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgresConnectionString);
     postgresqlConnection.Open();
 
     NpgsqlCommand postgresqlCommand = new NpgsqlCommand();
@@ -163,7 +165,7 @@ void InsertRecordsIntoPostgres(string sqlSchema, string table, string postgreSch
             
             try
             {
-                postgresqlCommand.CommandText = $"INSERT INTO \"{postgreSchema}\".\"{table}\" ({columns}) VALUES ({values})";
+                postgresqlCommand.CommandText = $"INSERT INTO \"{postgresSchema}\".\"{table}\" ({columns}) VALUES ({values})";
                 postgresqlCommand.ExecuteNonQuery();
                 
                 rowCounter++;
@@ -185,9 +187,9 @@ void InsertRecordsIntoPostgres(string sqlSchema, string table, string postgreSch
     }
 }
 
-void DisableTriggers(string schema, string table)
+void DisableTriggersInPostgres(string schema, string table)
 {
-    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgreConnectionString);
+    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgresConnectionString);
     postgresqlConnection.Open();
     
     using (NpgsqlCommand postgresqlCommand = new NpgsqlCommand())
@@ -200,9 +202,9 @@ void DisableTriggers(string schema, string table)
     postgresqlConnection.Close();
 }
 
-void EnableTriggers(string schema, string table)
+void EnableTriggersInPostgres(string schema, string table)
 {
-    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgreConnectionString);
+    NpgsqlConnection postgresqlConnection = new NpgsqlConnection(postgresConnectionString);
     postgresqlConnection.Open();
     
     using (NpgsqlCommand postgresqlCommand = new NpgsqlCommand())
@@ -215,26 +217,22 @@ void EnableTriggers(string schema, string table)
     postgresqlConnection.Close();
 }
 
-var sqlSchemas = new List<string> { "dbo", "Petition", "Archiving", "Survey", /*"Notification",*/ "Advising" };
-var postgreSchemas = new List<string> { "public", "Petition", "Archiving", "Survey", /*"Notification",*/ "Advising" };
+var sqlSchemas = new List<string> { "dbo", "x", "y", "z"};
+var postgresSchemas = new List<string> { "public", "x", "y", "z"};
 
-var schemaTuples = sqlSchemas.Zip(postgreSchemas, (a, b) => (a, b));
+var schemaTuples = sqlSchemas.Zip(postgresSchemas, (a, b) => (a, b));
 
-foreach (var (sqlSchema, postgresSchema) in schemaTuples)
+/*foreach (var (sqlSchema, postgresSchema) in schemaTuples)
 {
     var tables = FetchTablesInSqlServerSchema(sqlSchema).ToList();
     if(!tables.Any())
         continue;
 
-    if (tables.Any(t => t == "__EFMigrationsHistory"))
-    {
-        tables.Remove("__EFMigrationsHistory");
-    }
-        
     foreach (var table in tables)
     {
-        DisableTriggers(postgresSchema, table!);
+        CreateTableInPostgres(postgresSchema, table!);
+        DisableTriggersInPostgres(postgresSchema, table!);
         InsertRecordsIntoPostgres(sqlSchema, table!, postgresSchema);
-        EnableTriggers(postgresSchema, table!);
+        EnableTriggersInPostgres(postgresSchema, table!);
     }
-}
+}*/

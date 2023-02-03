@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLServer to Postgre", "SQLServer to Postgre\SQLServer to Postgre.csproj", "{4FEF8000-B2FC-4BA2-BFB6-BC561F7B7B85}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLServer to Postgres", "SQLServer to Postgres\SQLServer to Postgres.csproj", "{4FEF8000-B2FC-4BA2-BFB6-BC561F7B7B85}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

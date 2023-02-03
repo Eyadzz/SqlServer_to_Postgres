@@ -1,0 +1,71 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\EYAD\\RiderProjects\\SQLServer to Postgre\\SQLServer to Postgres\\SQLServer to Postgres.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\EYAD\\RiderProjects\\SQLServer to Postgre\\SQLServer to Postgres\\SQLServer to Postgres.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\EYAD\\RiderProjects\\SQLServer to Postgre\\SQLServer to Postgres\\SQLServer to Postgres.csproj",
+        "projectName": "SQLServer to Postgres",
+        "projectPath": "C:\\Users\\EYAD\\RiderProjects\\SQLServer to Postgre\\SQLServer to Postgres\\SQLServer to Postgres.csproj",
+        "packagesPath": "C:\\Users\\EYAD\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\EYAD\\RiderProjects\\SQLServer to Postgre\\SQLServer to Postgres\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\EYAD\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Npgsql": {
+              "target": "Package",
+              "version": "[7.0.1, )"
+            },
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.8.5, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.102\\RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
